@@ -118,6 +118,7 @@ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wid
 </section>
 <details class="panel" open><summary>Customize<button class="chip" id="share">Share link</button></summary>
 <input id="shl" readonly hidden>
+<div class="chips"><button class="chip" id="bake">Save for everyone</button></div><div class="sm" id="bst"></div>
 <h3>Presets</h3>
 <div class="chips"><button class="chip" data-p="Keyboard">Old keyboard</button><button class="chip" data-p="Paper">Paper</button><button class="chip" data-p="Terminal">Terminal</button><button class="chip" data-p="Peach">Peach</button><button class="chip" data-p="Midnight">Midnight</button></div>
 <h3>Color ramp</h3>
@@ -165,11 +166,13 @@ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wid
 <div class="chips" style="margin-top:18px"><button class="chip" data-a="reset">Reset everything</button></div>
 </details>
 </main>
+<script type="application/json" id="baked">{}</script>
 <script>
 const $=s=>document.querySelector(s),MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const D={hue:42,sat:16,con:42,mode:'light',bgtx:'wood',tx:45,ktx:'worn',depth:6,tilt:8,grain:50,mh:100,dens:60,spr:7,nh:140,no:30,vh:205,vo:30,bl:14,ch:45,cs:14,cl:74,ns:55,vs:55,lh:40,ls:0,li:75,lt:3200,lc:'tl',sl2:60,rs:80,dm:50,bw:55,hf:'Caveat Brush',bg:'',fonts:[],seed:7,snd:'clicky',vol:60};
 const P={Keyboard:{hue:42,sat:16,con:42,mode:'light',mh:100,ktx:'worn',bgtx:'wood',tilt:8},Paper:{hue:150,sat:7,con:60,mode:'light',mh:135},Terminal:{hue:140,sat:28,con:70,mode:'dark',mh:105},Peach:{hue:20,sat:45,con:50,mode:'light',mh:150},Midnight:{hue:230,sat:32,con:65,mode:'dark',mh:165}};
-let S={...D};try{Object.assign(S,JSON.parse(localStorage.getItem('mosskeys2')||'{}'))}catch(e){}
+const B=(()=>{try{return JSON.parse(document.getElementById('baked').textContent)||{}}catch(e){return{}}})();
+let S={...D};try{if(window.claude&&B.S)Object.assign(S,B.S);else Object.assign(S,JSON.parse(localStorage.getItem('mosskeys2')||'null')||B.S||{})}catch(e){}
 
 function apply(){const st=document.documentElement.style,c=S.con,lo=10+(100-c)*.25,hi=99-(100-c)*.15,dk=S.mode=='dark',L=i=>lo+(hi-lo)*(dk?i/8:1-i/8),h=S.hue,s=S.sat,H=(l,a)=>`hsl(${h} ${s}% ${l.toFixed(1)}%${a==null?'':' / '+a})`,k=L(2.2),m=S.mh,v=(n,x)=>st.setProperty('--'+n,x);
 v('bg',H(L(.3)));const kl=+S.cl,KC=l=>`hsl(${S.ch} ${S.cs}% ${l}%)`;v('board',KC(Math.max(4,Math.min(96,kl+(kl>50?9:-8)))));v('key',KC(kl));v('edge',KC(Math.max(kl-15,3)));v('hi',KC(Math.min(kl+10,98)));v('kink',kl>55?'#1d1b18':'#f1ede4');v('ink',H(L(8)));v('line',H(L(8),S.tx/100*.4));v('speck',H(L(8),.13));v('well',`hsl(${h} ${s}% ${dk?4:14}% / .5)`);v('ng',`hsl(${S.nh} ${S.ns}% ${dk?30:78}% / ${S.no/100})`);v('vg',`hsl(${S.vh} ${S.vs}% ${dk?30:78}% / ${S.vo/100})`);v('bl',S.bl+'px');
@@ -185,9 +188,9 @@ const BA=(S.lc=='tl'||S.lc=='br')?'45deg':'135deg',bh=S.bw/2,bd=document.querySe
 ry.webkitMaskImage=ry.maskImage=`radial-gradient(circle at ${LA[3]},#000 0,#000 30%,transparent 100%),linear-gradient(${BA},transparent calc(50% - ${bh+6}%),#000 calc(50% - ${bh}%),#000 calc(50% + ${bh}%),transparent calc(50% + ${bh+6}%))`;ry.webkitMaskComposite='source-in';ry.maskComposite='intersect';ry.transformOrigin=LA[3];
 bd.opacity=S.dm/100*.85;bd.webkitMaskImage=bd.maskImage=`linear-gradient(${BA},#000 calc(50% - ${bh+8}%),transparent calc(50% - ${bh}%),transparent calc(50% + ${bh}%),#000 calc(50% + ${bh+8}%))`;
 const fe=document.querySelector('#sh feDropShadow');if(fe){fe.setAttribute('dx',DIR[0]*(1+S.sl2/30));fe.setAttribute('dy',DIR[1]*(1.4+S.sl2/25))}
-v('hf',`'${S.hf}'`);const fl=S.fonts||[];(document.getElementById('cf')||document.head.appendChild(Object.assign(document.createElement('style'),{id:'cf'}))).textContent=fl.map(f=>`@font-face{font-family:'CF ${f.n}';src:url(/_blob/${f.id})}`).join('');
+v('hf',`'${S.hf}'`);const fl=S.fonts||[];(document.getElementById('cf')||document.head.appendChild(Object.assign(document.createElement('style'),{id:'cf'}))).textContent=fl.filter(f=>f.id!='local').map(f=>`@font-face{font-family:'CF ${f.n}';src:url(/_blob/${f.id})}`).join('');
 const hs=$('#hf');if(hs.options.length!=GF.length+fl.length)hs.innerHTML=GF.map(f=>`<option style="font-family:'${f}'">${f}</option>`).join('')+fl.map(f=>`<option>CF ${f.n}</option>`).join('');hs.value=S.hf;
-const bs=document.body.style;bs.backgroundImage=S.bg?`url("/_blob/${S.bg}")`:'';bs.backgroundSize=S.bg?'cover':'';bs.backgroundAttachment=S.bg?'fixed':'';bs.backgroundPosition=S.bg?'center':'';
+const bs=document.body.style;bs.backgroundImage=S.bg?`url("${S.bg=='local'?bgUrl:'/_blob/'+S.bg}")`:'';bs.backgroundSize=S.bg?'cover':'';bs.backgroundAttachment=S.bg?'fixed':'';bs.backgroundPosition=S.bg?'center':'';
 lightKeys();castShadows();paintWheels();
 st.colorScheme=dk?'dark':'light';document.body.dataset.bgtx=S.bgtx;$('.board').dataset.ktx=S.ktx;
 document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',S[b.dataset.k]==b.dataset.v));
@@ -273,7 +276,7 @@ if(d.p){Object.assign(S,P[d.p]);apply();grow()}else if(d.k){S[d.k]=d.v;apply();i
 else if(d.a=='regrow'){S.seed=Math.random()*1e9|0;apply();grow()}else if(d.a=='reset'){S={...D};apply();grow()}});
 
 /* day notes, typewriter, video */
-let notes={};try{notes=JSON.parse(localStorage.getItem('mosskeys-notes')||'{}')}catch(e){}
+let notes={};try{const l=localStorage.getItem('mosskeys-notes');notes=window.claude?(B.notes||{}):(l?JSON.parse(l):(B.notes||{}))}catch(e){}
 const sk=()=>sel.join('-'),saveN=()=>{try{localStorage.setItem('mosskeys-notes',JSON.stringify(notes))}catch(e){}};
 const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('mosskeys-vid',1);r.onupgradeneeded=()=>r.result.createObjectStore('v');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const vget=async k=>{try{const d=await idb();return await new Promise(res=>{const q=d.transaction('v').objectStore('v').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)})}catch(e){return null}};
@@ -287,20 +290,22 @@ if(!keep)el.classList.remove('cur')}
 async function openDay(){const my=++tok,k=sk(),e=notes[k]||{},nm=$('#vname'),tx=$('#vtext');pend=undefined;setEdit(false);
 $('#dtl').textContent=new Date(sel[0],sel[1],sel[2]).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
 nm.className=tx.className='';nm.textContent=tx.textContent='';
-showVideo(e.vid?'/_blob/'+e.vid:null);
+if(e.vid=='local')vget(k).then(b=>{if(sk()==k&&pend===undefined)showVideo(b)});else showVideo(e.vid?'/_blob/'+e.vid:null);
 if(!e.name&&!e.text){nm.textContent='No event yet';tx.textContent='Press Edit to add a note and a video.';nm.className=tx.className='mut';return}
 await typeInto(nm,e.name||'',my);if(my!=tok)return;await typeInto(tx,e.text||'',my,1)}
 function mark(){const b=document.querySelector(`.key[data-d="${sel[2]}"]`);if(!b||sel[0]!=vy||sel[1]!=vm)return;const o=b.querySelector('i');if(o)o.remove();if(notes[sk()])b.insertAdjacentHTML('beforeend','<i></i>')}
 $('#edit').onclick=()=>{tok++;const e=notes[sk()]||{};$('#ename').value=e.name||'';$('#etext').value=e.text||'';pend=undefined;setEdit(true);$('#ename').focus()};
 $('#cancel').onclick=()=>openDay();
 $('#save').onclick=async()=>{const k=sk(),o=notes[k]||{},n=$('#ename').value.trim(),t=$('#etext').value;let vid=o.vid||'';
-try{if(pend)vid=(await AS.upload(pend)).id;else if(pend===null)vid=''}catch(x){alert('Video upload failed (max 20 MB, owner only).');return}
+try{if(pend){if(AS)vid=(await AS.upload(pend)).id;else{await vput(k,pend);vid='local'}}else if(pend===null){vid='';if(!AS)await vput(k,null)}}catch(x){alert('Video upload failed (max 20 MB).');return}
 if(n||t||vid){notes[k]={name:n,text:t,vid};try{if(DB)await DB.doc('days/'+k).set(notes[k])}catch(x){}}else{delete notes[k];try{if(DB)await DB.doc('days/'+k).delete()}catch(x){}}
 saveN();mark();openDay()};
 $('#vfile').onchange=e=>{const f=e.target.files[0];if(f){pend=f;showVideo(f)}e.target.value=''};
 $('#vrm').onclick=()=>{pend=null;showVideo(null)};
 ['#ename','#etext'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key.length==1||e.key=='Enter'||e.key=='Backspace')snd(0)}));
 /* light, wheels, fonts, sharing, shared storage */
+let bgUrl='';const locFont=async(n,b)=>{try{const ff=new FontFace('CF '+n,await b.arrayBuffer());await ff.load();document.fonts.add(ff)}catch(x){}};
+(async()=>{if(S.bg=='local'){const b=await vget('bg');if(b){bgUrl=URL.createObjectURL(b);apply()}}for(const f of S.fonts||[])if(f.id=='local'){const b=await vget('font-'+f.n);if(b)locFont(f.n,b)}})();
 let DIR=[1,1],DB=null,OWN=!window.claude,AS=null,svT;
 const GF=['Caveat Brush','Permanent Marker','Rock Salt','Special Elite','Rubik Dirt','Gloria Hallelujah','Reenie Beanie','Cinzel Decorative','Playfair Display','Abril Fatface','Bebas Neue','Pirata One','Press Start 2P','Sedgwick Ave Display','Londrina Sketch','Fredericka the Great'];
 const hsl=(h,s,l)=>{s/=100;l/=100;const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12;return 255*(l-a*Math.max(-1,Math.min(k-3,9-k,1)))};return[f(0),f(8),f(4)]};
@@ -314,14 +319,15 @@ WI.set(c,im);const pick=e=>{const b=c.getBoundingClientRect(),dx=e.clientX-b.lef
 c.onpointerdown=e=>{c.setPointerCapture(e.pointerId);pick(e);c.onpointermove=pick};c.onpointerup=()=>{c.onpointermove=null}});
 function paintWheels(){WI.forEach((im,c)=>{const x=c.getContext('2d'),z=c.width,R=z/2,k=WK[c.dataset.w],a=S[k[0]]/57.3,r=k[1]?S[k[1]]/100:.8,px=R+Math.cos(a)*r*R,py=R+Math.sin(a)*r*R;x.putImageData(im,0,0);[['#000',4],['#fff',2]].forEach(([s,w])=>{x.beginPath();x.arc(px,py,z*.06,0,7);x.lineWidth=w;x.strokeStyle=s;x.stroke()})})}
 $('#hf').onchange=e=>{S.hf=e.target.value;apply()};
-const up2=(id,fn)=>$(id).onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f||!AS)return;try{fn(f,(await AS.upload(f)).id);apply()}catch(x){alert('Upload failed (max 20 MB).')}};
-up2('#ffile',(f,id)=>{const n=f.name.replace(/\.[^.]+$/,'').replace(/[^\w ]/g,'');S.fonts=[...(S.fonts||[]),{n,id}];S.hf='CF '+n});up2('#bfile',(f,id)=>{S.bg=id});
+const up2=(id,fn)=>$(id).onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{await fn(f,AS?(await AS.upload(f)).id:'local');apply()}catch(x){alert('Upload failed (max 20 MB).')}};
+up2('#ffile',async(f,id)=>{const n=f.name.replace(/\.[^.]+$/,'').replace(/[^\w ]/g,'');if(id=='local'){await vput('font-'+n,f);await locFont(n,f)}S.fonts=[...(S.fonts||[]),{n,id}];S.hf='CF '+n});up2('#bfile',async(f,id)=>{if(id=='local'){await vput('bg',f);bgUrl=URL.createObjectURL(f)}S.bg=id});
 $('#brm').onclick=()=>{S.bg='';apply()};
+$('#bake').onclick=async()=>{const st=$('#bst');st.textContent='Saving...';try{const A=await claude.use('artifact');if(!A)throw 0;let h=await(await fetch(location.href.split('#')[0])).text();const d=JSON.stringify({S,notes}).replace(/</g,'\\u003c');h=h.replace(/(<script type="application\/json" id="baked">)[\s\S]*?(<\/script>)/,(m,a,b)=>a+d+b);await A.publish(h);st.textContent=(S.bg=='local'||Object.values(notes).some(n=>n.vid=='local'))?'Saved, but uploads made in a downloaded copy stay on that device.':'Saved. Everyone now sees this version.'}catch(x){st.textContent='Could not save. Open the published link while signed in as owner.'}};
 $('#share').onclick=e=>{e.preventDefault();e.stopPropagation();const i=$('#shl');i.value='https://claude.ai/artifact/C2Hw1C3fjjEyvJME6CrBY6#view';i.hidden=!i.hidden;if(!i.hidden){i.select();try{navigator.clipboard.writeText(i.value)}catch(x){}}};
 (async()=>{try{if(!window.claude)return;const u=await claude.use('user');OWN=!!(u&&u.isOwner())&&location.hash!='#view';DB=await claude.use('db');AS=OWN?await claude.use('assets'):null}catch(x){}
 document.body.classList.toggle('ro',!OWN&&!!window.claude);if(!DB)return;
 DB.doc('cfg/main').onSnapshot(s=>{if(!s.exists){if(OWN)DB.doc('cfg/main').set(S).catch(()=>{});return}const d=s.data();if(JSON.stringify(d)==JSON.stringify(S)||(OWN&&s.metadata.hasPendingWrites))return;S={...D,...d};apply();grow()},()=>{});
-DB.collection('days').onSnapshot(q=>{const pj=JSON.stringify(notes[sk()]);notes={};q.docs.forEach(x=>notes[x.id]=x.data());render();if(!edit&&JSON.stringify(notes[sk()])!=pj)openDay()},()=>{})})();
+DB.collection('days').onSnapshot(q=>{if(q.empty&&Object.keys(B.notes||{}).length)return;const pj=JSON.stringify(notes[sk()]);notes={};q.docs.forEach(x=>notes[x.id]=x.data());render();if(!edit&&JSON.stringify(notes[sk()])!=pj)openDay()},()=>{})})();
 render();apply();openDay();
 let raf;new ResizeObserver(()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(grow)}).observe($('#grid'));
 addEventListener('load',grow);
